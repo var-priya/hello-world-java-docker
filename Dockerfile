@@ -1,14 +1,23 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5
+# Use openjdk image with JDK 17
+FROM openjdk:17-slim
 
-MAINTAINER Muhammad Edwin < edwin at redhat dot com >
+# Install Maven
+RUN apt-get update && apt-get install -y maven
 
-LABEL BASE_IMAGE="registry.access.redhat.com/ubi8/ubi-minimal:8.5"
-LABEL JAVA_VERSION="11"
+# Set the working directory inside the container
+WORKDIR /app
 
-RUN microdnf install --nodocs java-11-openjdk-headless && microdnf clean all
+# Copy the pom.xml to leverage Docker cache for dependencies
+COPY pom.xml .
 
-WORKDIR /work/
-COPY target/*.jar /work/application.jar
+# Copy the source code into the container
+COPY src /app/src
 
+# Build the application using Maven (assuming pom.xml is a Maven project)
+RUN mvn clean package -DskipTests
+
+# Expose the port your application will run on (adjust this port as needed)
 EXPOSE 8080
-CMD ["java", "-jar", "application.jar"]
+
+# Run the application using the JAR file (replace 'target/app.jar' with the actual path to the JAR)
+CMD ["java", "-jar", "target/hello-world-docker-1.0-SNAPSHOT.jar"]
